@@ -104,17 +104,17 @@ http://localhost:8080/swagger-ui.html
 
 📎 6. 레포지토리 구조
 `
-everywhere-backend/
-│
-├── src/main/java/com/ebkb/everywhere/
-│   ├── config/
-│   ├── controller/
-│   ├── service/
-│   ├── dto/
-│   └── EverywhereApplication.java
-│
-├── src/main/resources/
-│   └── application.properties
-│
-└── build.gradle
+everywhere-backend/ </p>
+│ </p>
+├── src/main/java/com/ebkb/everywhere/ </p>
+│   ├── config/ </p>
+│   ├── controller/ </p>
+│   ├── service/ </p>
+│   ├── dto/ </p>
+│   └── EverywhereApplication.java </p>
+│ </p>
+├── src/main/resources/ </p>
+│   └── application.properties </p>
+│ </p>
+└── build.gradle </p>
 `
