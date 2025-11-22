@@ -65,6 +65,7 @@ Request Params
 spaceId	Long	201
 latitude	Double	37.5526
 longitude	Double	126.9392
+
 3.2 최적 공간 추천 API (View 2)
 Method	URL	설명
 POST	/api/v1/recommendation	사용자 목적·위치 기반 최적 공간 추천
@@ -76,10 +77,12 @@ currentLongitude	Double	126.9390	사용자 경도
 currentFloor	String	"1"	현재 층 (문자열로 전달)
 purpose	String	"study"	추천 목적 텍스트
 ### 🔄 4. BE ↔ AI 서버 통신 구조
+
 4.1 FastAPI 호출 구조
 목적	BE 메서드	FastAPI 엔드포인트
 혼잡도 예측 (Model 1)	aiServerService.callAiModel1()	POST /ai/predict/count
 공간 추천 (NLP + Model2)	aiServerService.callAiModel2()	POST /api/internal/ai/recommendation
+
 4.2 공간 추천 처리 흐름
 
 Spring Boot가 사용자 위치를 기반으로
@@ -99,22 +102,3 @@ Spring Boot가 응답을 정렬하여 클라이언트에 반환
 서버 실행 중 아래 URL 접속:
 
 http://localhost:8080/swagger-ui.html
-
-아래 내용 그대로 복붙하면 GitHub에서 예쁘게 나온다.
-
-📎 6. 레포지토리 구조
-`
-everywhere-backend/ </p>
-│ </p>
-├── src/main/java/com/ebkb/everywhere/ </p>
-│   ├── config/ </p>
-│   ├── controller/ </p>
-│   ├── service/ </p>
-│   ├── dto/ </p>
-│   └── EverywhereApplication.java </p>
-│ </p>
-├── src/main/resources/ </p>
-│   └── application.properties </p>
-│ </p>
-└── build.gradle </p>
-`
