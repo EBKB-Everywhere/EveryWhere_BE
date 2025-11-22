@@ -145,7 +145,7 @@ def build_features(img_path, ble_raw, audio_path):
     }
     return row 
 
-def predict_crowd(img_path, ble_raw, audio_path, ID):
+def predict_crowd(ID, img_path, ble_raw, audio_path):
     """
     feature_dict 예시:
     {
@@ -522,6 +522,7 @@ if __name__ == "__main__":
 
     # 💡 포트 8001로 실행
     uvicorn.run(app, host="0.0.0.0", port=8001)
+
 
 
 
