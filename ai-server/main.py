@@ -450,12 +450,14 @@ async def predict_count_endpoint(request: AiPredictCountRequest):
     """
     AI 모델 1 (혼잡도 인원수 계산)
     """
+
+    ID, result = predict_crowd(request.spaceId, request.imagePath, request.bluetooth, request.audioFile)
     # **AI 로직 더미:** 요청된 spaceId를 기반으로 임의의 인원수 반환
     dummy_count = 10 + math.ceil(math.sin(request.spaceId * 10) * 5)
 
     return AiPredictCountResponse(
         spaceId=request.spaceId,
-        predictCount=dummy_count,
+        predictCount=int(result)
     )
 
 # 2-2. AI모델2 호출 API (최종 추천 점수 계산)
@@ -520,5 +522,6 @@ if __name__ == "__main__":
 
     # 💡 포트 8001로 실행
     uvicorn.run(app, host="0.0.0.0", port=8001)
+
 
 
