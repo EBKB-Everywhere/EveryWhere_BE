@@ -32,6 +32,14 @@ if not MY_GEMINI_API_KEY:
 app = FastAPI(title="AI Space Recommendation API")
 client = genai.Client(api_key=MY_GEMINI_API_KEY)
 
+# 모델 로드
+model = joblib.load("crowd_classifier.pkl")
+
+top_features = [
+    'mfcc_9_mean', 'mfcc_7_mean', 'zcr', 'band0_300',
+    'numberOfHuman', 'speech_noise_ratio', 'mfcc_3_mean',
+    'mfcc_14_mean', 'mfcc_8_mean', 'centroid', 'bleNum'
+]
 
 # Spring Boot BE에서 하드코딩한 Space 데이터를 동일하게 적용
 ALL_SPACE_DATA = [
@@ -375,3 +383,4 @@ if __name__ == "__main__":
 
     # 💡 포트 8001로 실행
     uvicorn.run(app, host="0.0.0.0", port=8001)
+
