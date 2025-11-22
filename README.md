@@ -103,6 +103,7 @@ http://localhost:8080/swagger-ui.html
 아래 내용 그대로 복붙하면 GitHub에서 예쁘게 나온다.
 
 📎 6. 레포지토리 구조
+`
 everywhere-backend/
 │
 ├── src/main/java/com/ebkb/everywhere/
@@ -115,4 +116,5 @@ everywhere-backend/
 ├── src/main/resources/
 │   └── application.properties
 │
-└── build.gradl
+└── build.gradle
+`
