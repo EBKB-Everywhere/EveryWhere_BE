@@ -1,7 +1,8 @@
-package com.ebkb.everywhere.Controller;
+package com.ebkb.everywhere.controller;
 
 import com.ebkb.everywhere.dto.*;
 import com.ebkb.everywhere.service.AiServerService;
+import com.ebkb.everywhere.service.AiServerService.CandidateSpaceData;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -35,7 +36,15 @@ public class SpaceController {
         // 2. Response DTO 구성
         CongestionResponse response = new CongestionResponse();
         response.setSpaceId(spaceId);
-        response.setSpaceName("중앙 도서관 " + spaceId + "열람실"); // 더미 공간 이름
+
+        // 공간 이름을 찾기 위한 간단한 로직 (하드코딩 데이터 기반)
+        String spaceName = aiServerService.getAllCandidateSpaces().stream()
+                .filter(s -> s.spaceId.equals(spaceId))
+                .map(s -> s.spaceName)
+                .findFirst()
+                .orElse("알 수 없는 공간");
+
+        response.setSpaceName(spaceName);
         response.setLatitude(latitude);
         response.setLongitude(longitude);
         response.setPredictCount(aiResponse.getPredictCount());
@@ -48,44 +57,42 @@ public class SpaceController {
     public ResponseEntity<List<RecommendSpaceResponse>> getRecommendation(
             @RequestBody RecommendationRequest request) {
 
-        // 1. DB에서 공간 후보 목록 조회 (더미)
-        List<AiServerService.CandidateRoomInfo> dbRooms = aiServerService.getCandidateRoomsFromDb();
+        // 1. 하드코딩된 모든 공간 정보 목록 조회
+        List<CandidateSpaceData> allSpaces = aiServerService.getAllCandidateSpaces();
 
         // 2. AI 모델 2 요청 DTO (AiRecommendationRequest) 구성 및 BE Feature (거리) 연산
-        List<AiRecommendationRequest.CandidateRoom> candidateRooms = dbRooms.stream()
-                .map(dbRoom -> {
+        List<AiRecommendationRequest.CandidateRoom> candidateRooms = allSpaces.stream()
+                .map(spaceData -> {
+                    // 2-1. 거리 계산 및 Feature 변환
                     double distanceKm = aiServerService.calculateDistanceKm(
                             request.getCurrentLatitude(), request.getCurrentLongitude(),
-                            dbRoom.latitude, dbRoom.longitude);
+                            spaceData.spaceLat, spaceData.spaceLon);
                     double distanceFeature = aiServerService.calculateDistanceFeature(distanceKm);
 
-                    // TODO: AI 모델 1을 순회하며 호출하여 predictCount를 가져와야 함.
-                    // 시간 절약을 위해 여기서는 하드코딩된 더미 값을 사용하거나, AI 모델 1 호출 로직을 분리하는 것이 좋음.
-                    // 여기서는 **더미 predictCount (10명)**를 사용합니다.
+                    // 🌟 목적 점수는 AI 서버가 계산하도록 임시값 0.0을 보냄
+                    Double dummyPurposeScore = 0.0;
+
+                    // 2-2. 혼잡도 (AI Model 1) 호출은 시간상 생략하고 더미값 사용
                     Integer dummyPredictCount = 10;
 
-                    // TODO: NLP 모델의 purposeScore (목적 점수)도 여기서 가져와야 함.
-                    // 여기서는 **더미 purposeScore (0.8)**를 사용합니다.
-                    Double dummyPurposeScore = 0.8;
-
                     AiRecommendationRequest.CandidateRoom room = new AiRecommendationRequest.CandidateRoom();
-                    room.setSpaceId(dbRoom.spaceId);
-                    room.setSpaceName(dbRoom.spaceName);
-                    room.setPurposeScore(dummyPurposeScore);
-                    room.setDistanceFeature(distanceFeature);
+                    room.setSpaceId(spaceData.spaceId);
+                    room.setSpaceName(spaceData.spaceName);
+                    room.setPurposeScore(dummyPurposeScore); // 🌟 임시값 (AI 서버에서 덮어씀)
+                    room.setDistanceFeature(distanceFeature); // BE 계산 결과 사용
                     room.setPredictCount(dummyPredictCount);
-                    room.setCapacity(dbRoom.capacity);
-                    room.setQuiet_score(dbRoom.quiet_score);
-                    room.setTalk_score(dbRoom.talk_score);
-                    room.setStudy_score(dbRoom.study_score);
-                    room.setRest_score(dbRoom.rest_score);
+                    room.setCapacity(spaceData.spaceCapacity);
+                    room.setQuiet_score(spaceData.quiteScore);
+                    room.setTalk_score(spaceData.talkScore);
+                    room.setStudy_score(spaceData.studyScore);
+                    room.setRest_score(spaceData.restScore);
                     return room;
                 })
                 .collect(Collectors.toList());
 
         AiRecommendationRequest aiRequest = new AiRecommendationRequest();
         aiRequest.setUserId(request.getUserId());
-        aiRequest.setUserText(request.getPurpose());
+        aiRequest.setUserText(request.getPurpose()); // 🌟 사용자 목적 텍스트를 AI 서버로 전달
         aiRequest.setCandidateRooms(candidateRooms);
 
         // 3. AI 모델 2 호출 (2-2)
@@ -94,21 +101,24 @@ public class SpaceController {
         // 4. AI 결과와 거리 정보를 통합하여 최종 응답 DTO 구성
         List<RecommendSpaceResponse> finalResponse = aiResponse.getData().stream()
                 .map(aiResult -> {
-                    AiRecommendationRequest.CandidateRoom originalRoom = candidateRooms.stream()
-                            .filter(c -> c.getSpaceId().equals(aiResult.getSpaceId()))
-                            .findFirst().orElse(null);
+                    // 원본 공간 정보 찾기
+                    CandidateSpaceData originalSpace = allSpaces.stream()
+                            .filter(d -> d.spaceId.equals(aiResult.getSpaceId()))
+                            .findFirst()
+                            .orElse(null);
 
-                    if (originalRoom == null) return null; // 오류 처리
+                    if (originalSpace == null) return null;
 
+                    // Response DTO에 포함할 거리(km) 재계산
                     double distanceKm = aiServerService.calculateDistanceKm(
                             request.getCurrentLatitude(), request.getCurrentLongitude(),
-                            dbRooms.stream().filter(d -> d.spaceId.equals(aiResult.getSpaceId())).findFirst().get().latitude,
-                            dbRooms.stream().filter(d -> d.spaceId.equals(aiResult.getSpaceId())).findFirst().get().longitude
+                            originalSpace.spaceLat,
+                            originalSpace.spaceLon
                     );
 
                     RecommendSpaceResponse response = new RecommendSpaceResponse();
                     response.setSpaceId(aiResult.getSpaceId());
-                    response.setSpaceName(originalRoom.getSpaceName());
+                    response.setSpaceName(originalSpace.spaceName);
                     response.setDistanceKm(distanceKm);
                     response.setRecommendationScore(aiResult.getFinalRecommendScore());
                     return response;
