@@ -108,7 +108,7 @@ def build_features(img_path, ble_raw, audio_path):
 
 # ~~~~~~~~~~~~~~~~~predict(이거돌리는거임)~~~~~~~~~~~~~~~~
 
-def predict_crowd(img_path, ble_raw, audio_path, ID):
+def predict_crowd(ID, img_path, ble_raw, audio_path):
     
     model = joblib.load("crowd_classifier.pkl")
     
@@ -148,4 +148,5 @@ def predict_crowd(img_path, ble_raw, audio_path, ID):
     else:
         result = round(32+random.uniform(-6, 6))
         
+
     return ID, result
