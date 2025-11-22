@@ -35,3 +35,7 @@ out/
 
 ### VS Code ###
 .vscode/
+
+# 파이썬 캐시 파일 무시
+__pycache__/
+*.pyc
