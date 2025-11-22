@@ -17,8 +17,8 @@ public class AiServerService {
     private final String aiServerUrl;
 
     // AI 서버 내부 호출 URL
-    private static final String AI_PREDICT_COUNT_URL = "/ai/predict/count";
-    private static final String AI_RECOMMENDATION_URL = "/api/internal/ai/recommendation"; // AI 모델 2
+    private static final String AI_PREDICT_COUNT_URL = "/api/v1/congestion";
+    private static final String AI_RECOMMENDATION_URL = "/api/v1/recommendation"; // AI 모델 2
 
     // 🌟 1. 하드코딩된 공간 정보를 담는 내부 클래스 정의 (유지)
     public static class CandidateSpaceData {
